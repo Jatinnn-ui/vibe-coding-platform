@@ -5,10 +5,13 @@ import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import type { LanguageModelV3 } from '@ai-sdk/provider'
 
 const gateway = createGatewayProvider({
-  baseURL: process.env.AI_GATEWAY_BASE_URL,
+  baseURL: process.env.AI_GATEWAY_BASE_URL || 'https://api.vercel.ai/openai',
   headers: {
     'http-referer': 'https://oss-vibe-coding-platform.vercel.app/',
     'x-title': 'Vibe Coding Platform',
+    ...(process.env.GROQ_API_KEY && {
+      'authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+    }),
   },
 })
 
