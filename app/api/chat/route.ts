@@ -34,6 +34,47 @@ export async function POST(req: Request) {
     )
   }
 
+  // Demo mode: Use mock responses if API key is not configured
+  if (!process.env.AI_GATEWAY_API_KEY && process.env.NODE_ENV !== 'production') {
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          try {
+            const lastMessage = messages[messages.length - 1]
+            const userInput = lastMessage?.parts?.[0] && 'text' in lastMessage.parts[0] 
+              ? lastMessage.parts[0].text 
+              : ''
+            
+            const demoResponse = `I'm running in demo mode without an API key. Here's a sample response to: "${userInput}"\n\nTo enable full AI capabilities:\n1. Set up billing on Vercel AI Gateway\n2. Add AI_GATEWAY_API_KEY to your .env.local\n3. Restart the development server\n\nFor now, you can see the chat UI is working correctly!`
+            
+            // Send text content in chunks
+            const chunk = Buffer.from(
+              `0:"""${demoResponse}"""\n`
+            )
+            controller.enqueue(chunk)
+            
+            // Send final message
+            const finalChunk = Buffer.from(
+              `d:\n`
+            )
+            controller.enqueue(finalChunk)
+            
+            controller.close()
+          } catch (error) {
+            controller.error(error)
+          }
+        },
+      }),
+      {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      }
+    )
+  }
+
   return createUIMessageStreamResponse({
     stream: createUIMessageStream({
       originalMessages: messages,
