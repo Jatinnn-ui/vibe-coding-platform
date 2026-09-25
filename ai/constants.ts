@@ -1,5 +1,3 @@
-import { type GatewayModelId } from '@ai-sdk/gateway'
-
 export enum Models {
   AnthropicClaudeOpus46 = 'anthropic/claude-opus-4.6',
   AnthropicClaudeSonnet46 = 'anthropic/claude-sonnet-4.6',
@@ -7,9 +5,9 @@ export enum Models {
   XaiGrok41Reasoning = 'xai/grok-4.1-fast-reasoning',
 }
 
-export const DEFAULT_MODEL = Models.AnthropicClaudeOpus46
+export const DEFAULT_MODEL = Models.XaiGrok41Reasoning
 
-export const SUPPORTED_MODELS: GatewayModelId[] = [
+export const SUPPORTED_MODELS: string[] = [
   Models.AnthropicClaudeOpus46,
   Models.AnthropicClaudeSonnet46,
   Models.OpenAIGPT53Codex,

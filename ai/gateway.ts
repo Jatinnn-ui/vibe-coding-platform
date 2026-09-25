@@ -1,19 +1,22 @@
-import { createGatewayProvider } from '@ai-sdk/gateway'
+import { createOpenAI } from '@ai-sdk/openai'
 import { Models } from './constants'
 import type { JSONValue } from 'ai'
-import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import type { LanguageModelV3 } from '@ai-sdk/provider'
 
-const gateway = createGatewayProvider({
-  baseURL: process.env.AI_GATEWAY_BASE_URL || 'https://api.vercel.ai/openai',
-  headers: {
-    'http-referer': 'https://oss-vibe-coding-platform.vercel.app/',
-    'x-title': 'Vibe Coding Platform',
-    ...(process.env.GROQ_API_KEY && {
-      'authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-    }),
-  },
+const groq = createOpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
 })
+
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
+
+function getGroqModel() {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY is not configured. Add it to the project environment variables.')
+  }
+
+  return groq.chat(GROQ_MODEL)
+}
 
 export interface ModelOptions {
   model: LanguageModelV3
@@ -25,36 +28,7 @@ export function getModelOptions(
   modelId: string,
   options?: { reasoningEffort?: 'low' | 'medium' | 'high' }
 ): ModelOptions {
-  if (modelId === Models.OpenAIGPT53Codex) {
-    return {
-      model: gateway(modelId),
-      providerOptions: {
-        openai: {
-          include: ['reasoning.encrypted_content'],
-          reasoningEffort: options?.reasoningEffort ?? 'low',
-          reasoningSummary: 'auto',
-          serviceTier: 'priority',
-        } satisfies OpenAIResponsesProviderOptions,
-      },
-    }
-  }
-
-  if (
-    modelId === Models.AnthropicClaudeSonnet46 ||
-    modelId === Models.AnthropicClaudeOpus46
-  ) {
-    return {
-      model: gateway(modelId),
-      headers: { 'anthropic-beta': 'fine-grained-tool-streaming-2025-05-14' },
-      providerOptions: {
-        anthropic: {
-          cacheControl: { type: 'ephemeral' },
-        },
-      },
-    }
-  }
-
   return {
-    model: gateway(modelId),
+    model: getGroqModel(),
   }
 }
